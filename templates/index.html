@@ -1,0 +1,332 @@
+{% extends "layout.html" %}
+{% block content %}
+<script type=text/javascript>
+  refreshTimer = null;
+  refreshInterval = 1000;
+  
+  function refreshStatus() {
+    $.ajax({
+        type: "GET",
+        url: $SCRIPT_ROOT + "/status/",
+        contentType: "application/json; charset=utf-8",
+        data: { echoValue: $('input[name="statusBtn"]').val() },
+        success: function(data) {
+            $('#echoleft').text(data.speedl);        
+            $('#echoright').text(data.speedr);
+            $('#echoerror').text(data.error_msg);				
+        }
+    });     
+  };
+
+  function periodicRefresh() {
+    refreshStatus();
+
+    setTimeout(periodicRefresh, refreshInterval);
+  };
+
+  function startPeriodicRefresh(seconds) {
+    if (refreshTimer)
+        clearTimeout(refreshTimer);
+    
+    refreshInterval = seconds * 1000;
+    
+    refreshTimer = setTimeout(periodicRefresh, refreshInterval);
+  }
+
+  $(function() {
+    $('#refreshRate').change(function() {
+        startPeriodicRefresh($('#refreshRate').val());
+    });
+    startPeriodicRefresh(1);
+ 
+    $("#refreshBtn").click(function() {
+         refreshStatus();     
+    });
+
+    $("#leftBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/left/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="leftBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    });
+    $("#rightBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/right/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="rightBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    });
+    $("#forwardBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/forward/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="forwardBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    });
+    $("#backwardBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/backward/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="backwardBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    });
+    $("#stopBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/stop/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="stopBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    });
+    $("#rebootBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/reboot/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="rebootBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    }); 
+    $("#haltBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/halt/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="haltBtn"]').val() },
+            success: function(data) {
+                $('#echoResultRaspberry').text(data.value);
+            }
+        });     
+    });                 
+  });
+</script>
+
+<script type="text/javascript">
+
+    /* Copyright (C) 2007 Richard Atterer, richardĀ©atterer.net
+       This program is free software; you can redistribute it and/or modify it
+       under the terms of the GNU General Public License, version 2. See the file
+       COPYING for details. */
+    
+    var imageNr = 0; // Serial number of current image
+    var finished = new Array(); // References to img objects which have finished downloading
+    var paused = false;
+    
+    function createImageLayer() {
+      var img = new Image();
+      img.style.position = "absolute";
+      img.style.zIndex = -1;
+      img.onload = imageOnload;
+      img.onclick = imageOnclick;
+      img.src = "http://192.168.178.111:8080/?action=snapshot&n=" + (++imageNr);
+      var webcam = document.getElementById("webcam");
+      webcam.insertBefore(img, webcam.firstChild);
+    }
+    
+    // Two layers are always present (except at the very beginning), to avoid flicker
+    function imageOnload() {
+      this.style.zIndex = imageNr; // Image finished, bring to front!
+      while (1 < finished.length) {
+        var del = finished.shift(); // Delete old image(s) from document
+        del.parentNode.removeChild(del);
+      }
+      finished.push(this);
+      if (!paused) createImageLayer();
+    }
+    
+    function imageOnclick() { // Clicking on the image will pause the stream
+      paused = !paused;
+      if (!paused) createImageLayer();
+    }
+    
+</script>
+
+<script type="text/javascript">
+    // The browser window should not move by pressing an arrow key.
+    window.addEventListener("keydown", function(e) {
+        // space and arrow keys
+        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+            e.preventDefault();
+        }
+    }, false);
+
+    // reeding the arrow keys to steer the robot.
+    document.onkeydown = function(evt) 
+	{
+     evt = evt || window.event;
+        switch (evt.keyCode) 
+		{
+                case 37:
+                    $.ajax({
+                        type: "GET",
+                        url: $SCRIPT_ROOT + "/left/",
+                        contentType: "application/json; charset=utf-8",
+                        data: { echoValue: $('input[name="leftBtn"]').val() },
+                        success: function(data) {
+                            $('#echoResultRaspberry').text(data.value);
+                        }
+                    }); 
+                break;
+
+                case 38:
+                    $.ajax({
+                        type: "GET",
+                        url: $SCRIPT_ROOT + "/forward/",
+                        contentType: "application/json; charset=utf-8",
+                        data: { echoValue: $('input[name="forwardBtn"]').val() },
+                        success: function(data) {
+                            $('#echoResultRaspberry').text(data.value);
+                        }
+                    });
+                break;
+
+                 case 39:
+                    $.ajax({
+                        type: "GET",
+                        url: $SCRIPT_ROOT + "/right/",
+                        contentType: "application/json; charset=utf-8",
+                        data: { echoValue: $('input[name="rightBtn"]').val() },
+                        success: function(data) {
+                            $('#echoResultRaspberry').text(data.value);
+                        }
+                    });
+                break;
+
+                case 40:
+                    $.ajax({
+                        type: "GET",
+                        url: $SCRIPT_ROOT + "/backward/",
+                        contentType: "application/json; charset=utf-8",
+                        data: { echoValue: $('input[name="backwardBtn"]').val() },
+                        success: function(data) {
+                            $('#echoResultRaspberry').text(data.value);
+                        }
+                    }); 
+                break;
+                case 83:
+                    $.ajax({
+                        type: "GET",
+                        url: $SCRIPT_ROOT + "/stop/",
+                        contentType: "application/json; charset=utf-8",
+                        data: { echoValue: $('input[name="stopBtn"]').val() },
+                        success: function(data) {
+                            $('#echoResultRaspberry').text(data.value);
+                        }
+                    }); 
+                break;
+        }
+    }
+
+	webiopi().ready(init);
+</script>
+
+<div class="ui-grid-a">
+        <div class="ui-block-a" id="webcam" style="height: 640px; width: 800px;"><noscript><img src="./?action=snapshot" /></noscript></div>
+</div>
+
+<div class="ui-grid-c">
+    <div class="ui-block-a"></div>
+    <div class="ui-block-b"><button class="ui-btn ui-corner-all" type='button' id='forwardBtn' name='forwardBtn'>FORWARD</button></div>
+    <div class="ui-block-c"></div>
+
+</div>
+<div class="ui-grid-c">
+    <div class="ui-block-a"><button class="ui-btn ui-corner-all" type='button' id='leftBtn' name='leftBtn'>LEFT</button></div>
+    <div class="ui-block-b"><button class="ui-btn ui-corner-all" type='button' id='stopBtn' name='stopBtn'>STOP</button></div>    
+    <div class="ui-block-c"><button class="ui-btn ui-corner-all" type='button' id='rightBtn' name='rightBtn'>RIGHT</button></div>
+
+</div>
+<div class="ui-grid-c">
+    <div class="ui-block-a"></div>
+    <div class="ui-block-b"><button class="ui-btn ui-corner-all" type='button' id='backwardBtn' name='backwardBtn'>BACKWARD</button></div>
+    <div class="ui-block-c"></div>
+</div>
+<br />
+
+    <br />
+    <strong>Roboter Auto Informationen:</strong><br />
+    <table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
+        <thead>
+        <tr>
+            <th>Speed left motor</th>
+            <th>Speed right right</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td id="echoleft" align="center" style="font-size: 30px"></td>
+            <td id="echoright" align="center" style="font-size: 30px"></td>
+        </tr>
+        </tbody>
+    </table>
+    <table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
+            <thead>
+            <tr>
+                <th>Last button pressed</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td id="echoResultRaspberry" align="center" style="font-size: 30px"></td>
+            </tr>
+            </tbody>
+        </table>
+    <table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
+        <thead>
+        <tr>
+            <th>Error message</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td id="echoerror" align="center" style="font-size: 30px"></td>
+        </tr>
+        </tbody>
+    </table>
+
+<br />
+<br />
+<strong>Aktualisierung der Anzeige:</strong><br />
+<div class="ui-grid-a">
+    <div class="ui-block-a">
+        <select class="ui-btn ui-corner-all" id="refreshRate" data-native-menu="false">
+            <option value="1">1 Sekunde</option>
+            <option value="5">5 Sekunden</option>
+            <option value="30">30 Sekunden</option>
+            <option value="300">5 Minuten</option>
+        </select>
+    </div>
+    <div class="ui-block-b">
+        <button class="ui-btn ui-corner-all" type='button' id='refreshBtn'>SOFORT</button>
+    </div>
+</div>
+<br />
+<br />
+<strong>Raspberry Pi Steuerung:</strong><br />
+<div class="ui-grid-a">
+    <div class="ui-block-a"><button class="ui-btn ui-corner-all" type='button' id='rebootBtn' name='rebootBtn'>RASPBERRY PI NEUSTARTEN</button></div>
+    <div class="ui-block-b"><button class="ui-btn ui-corner-all" type='button' id='haltBtn' name='haltBtn'>RASPBERRY PI AUSSCHALTEN</button></div>
+</div>
+{% endblock %}
